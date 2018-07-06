@@ -16,12 +16,12 @@ export function replaceNode(node: ts.Node, text: string): Replacement {
 
 export function sortReplacements(replacements: Replacement[]): Replacement[] {
     return replacements.sort((a, b) => {
-        if(a.start != b.start) {
+        if (a.start != b.start) {
             return a.start - b.start;
         }
-        if(a.value == ';') {
+        if (a.value == ';') {
             return -1;
-        } else if(b.value == ';') {
+        } else if (b.value == ';') {
             return 1;
         }
         return a.end - b.end;
@@ -41,9 +41,9 @@ export function combineReplacements(replacements: Replacement[]): Replacement[] 
         return replacements;
     }
     replacements = sortReplacements(replacements);
-    let result: Replacement[] = [copy(replacements[0])];
+    const result: Replacement[] = [copy(replacements[0])];
     for (let i = 1; i < replacements.length; i++) {
-        let last = result[result.length - 1];
+        const last = result[result.length - 1];
         if (last.end == replacements[i].start) {
             last.end = replacements[i].end;
             last.value += replacements[i].value;

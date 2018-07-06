@@ -18,9 +18,9 @@ export function getBinPath(binname: string) {
         }
 
         if (process.env['PATH']) {
-            let pathparts = process.env['PATH'].split(path.delimiter);
+            const pathparts = process.env['PATH'].split(path.delimiter);
             for (let i = 0; i < pathparts.length; i++) {
-                let binpath = path.join(pathparts[i], binNameToSearch);
+                const binpath = path.join(pathparts[i], binNameToSearch);
                 if (fs.existsSync(binpath)) {
                     binPathCache[binname] = binpath;
                     return binpath;

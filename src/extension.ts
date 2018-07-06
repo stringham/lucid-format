@@ -11,105 +11,106 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
     private defaultConfigure = {executable: 'clang-format', assumeFilename: 'file.ts'};
 
     public provideDocumentFormattingEdits(
-        document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken,
+        document: vscode.TextDocument,
+        options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
     ): Thenable<vscode.TextEdit[]> {
         return this.doFormatDocument(document, token);
     }
 
     private getEdits(document: vscode.TextDocument, finalContent: string): vscode.TextEdit[] {
-            const modelLineSequence = new class implements ISequence {
-                public getLength(): number {
-                    return document.lineCount;
-                }
-                public getElementHash(index: number): string {
-                    return document.lineAt(index).text;
-                }
-            };
-            const finalLines = finalContent.split('\n');
-            const textSourceLineSequence = new class implements ISequence {
-                public getLength(): number {
-                    return finalLines.length;
-                }
-                public getElementHash(index: number): string {
-                    return finalLines[index];
-                }
-            };
+        const modelLineSequence = new class implements ISequence {
+            public getLength(): number {
+                return document.lineCount;
+            }
+            public getElementHash(index: number): string {
+                return document.lineAt(index).text;
+            }
+        };
+        const finalLines = finalContent.split('\n');
+        const textSourceLineSequence = new class implements ISequence {
+            public getLength(): number {
+                return finalLines.length;
+            }
+            public getElementHash(index: number): string {
+                return finalLines[index];
+            }
+        };
 
-            const diffResult = new LcsDiff(modelLineSequence, textSourceLineSequence).ComputeDiff(false);
+        const diffResult = new LcsDiff(modelLineSequence, textSourceLineSequence).ComputeDiff(false);
 
-            const edits: vscode.TextEdit[] = [];
-            const modelLineCount = document.lineCount;
+        const edits: vscode.TextEdit[] = [];
+        const modelLineCount = document.lineCount;
 
-            for (let i = 0; i < diffResult.length; i++) {
-                const diff = diffResult[i];
-                const originalStart = diff.originalStart;
-                const originalLength = diff.originalLength;
-                const modifiedStart = diff.modifiedStart;
-                const modifiedLength = diff.modifiedLength;
+        for (let i = 0; i < diffResult.length; i++) {
+            const diff = diffResult[i];
+            const originalStart = diff.originalStart;
+            const originalLength = diff.originalLength;
+            const modifiedStart = diff.modifiedStart;
+            const modifiedLength = diff.modifiedLength;
 
-                let lines: string[] = [];
-                for (let j = 0; j < modifiedLength; j++) {
-                    lines[j] = finalLines[modifiedStart + j];
-                }
-                let text = lines.join('\n');
+            let lines: string[] = [];
+            for (let j = 0; j < modifiedLength; j++) {
+                lines[j] = finalLines[modifiedStart + j];
+            }
+            const text = lines.join('\n');
 
-                if (originalLength == 0) {
-                    console.log('insertion');
-                    // insertion
-                    if (originalStart == modelLineCount) {
-                        console.log('insertion at end');
-                        // insert at end
-                        edits.push(new vscode.TextEdit(
-                            new vscode.Range(
-                                document.lineAt(document.lineCount - 1).range.end,
-                                document.lineAt(document.lineCount - 1).range.end
-                            ),
-                            '\n' + text
-                        ));
-                    } else {
-                        edits.push(new vscode.TextEdit(
-                            new vscode.Range(
-                                new vscode.Position(originalStart, 0),
-                                new vscode.Position(originalStart, 0),
-                            ),
-                            text + '\n'
-                        ));
-                    }
-                } else if (modifiedLength === 0) {
-                    // deletion
-                    console.log('deletion');
-                    if (originalStart + originalLength >= modelLineCount) {
-                        console.log('deletion at end');
-                        // delete at end
-                        edits.push(new vscode.TextEdit(
-                            new vscode.Range(
-                                document.lineAt(originalStart).range.end,
-                                document.lineAt(document.lineCount - 1).range.end
-                            ),
-                            ''
-                        ));
-                    } else {
-                        edits.push(new vscode.TextEdit(
-                            new vscode.Range(
-                                document.lineAt(originalStart).range.start,
-                                document.lineAt(originalStart + originalLength).range.start
-                            ),
-                            ''
-                        ));
-                    }
+            if (originalLength == 0) {
+                console.log('insertion');
+                // insertion
+                if (originalStart == modelLineCount) {
+                    console.log('insertion at end');
+                    // insert at end
+                    edits.push(new vscode.TextEdit(
+                        new vscode.Range(
+                            document.lineAt(document.lineCount - 1).range.end,
+                            document.lineAt(document.lineCount - 1).range.end
+                        ),
+                        '\n' + text
+                    ));
                 } else {
-                    console.log('modify');
+                    edits.push(new vscode.TextEdit(
+                        new vscode.Range(
+                            new vscode.Position(originalStart, 0),
+                            new vscode.Position(originalStart, 0),
+                        ),
+                        text + '\n'
+                    ));
+                }
+            } else if (modifiedLength === 0) {
+                // deletion
+                console.log('deletion');
+                if (originalStart + originalLength >= modelLineCount) {
+                    console.log('deletion at end');
+                    // delete at end
+                    edits.push(new vscode.TextEdit(
+                        new vscode.Range(
+                            document.lineAt(originalStart).range.end, document.lineAt(document.lineCount - 1).range.end
+                        ),
+                        ''
+                    ));
+                } else {
                     edits.push(new vscode.TextEdit(
                         new vscode.Range(
                             document.lineAt(originalStart).range.start,
-                            document.lineAt(originalStart + originalLength - 1).range.end
+                            document.lineAt(originalStart + originalLength).range.start
                         ),
-                        text
+                        ''
                     ));
                 }
+            } else {
+                console.log('modify');
+                edits.push(new vscode.TextEdit(
+                    new vscode.Range(
+                        document.lineAt(originalStart).range.start,
+                        document.lineAt(originalStart + originalLength - 1).range.end
+                    ),
+                    text
+                ));
             }
+        }
 
-            return edits;
+        return edits;
     }
 
     // Get execute name in clang-format.executable, if not found, use default value
@@ -129,65 +130,65 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
     }
 
     private getAssumedFilename(document: vscode.TextDocument) {
-        if(document.isUntitled) {
+        if (document.isUntitled) {
             return this.defaultConfigure.assumeFilename;
         }
         return document.fileName;
     }
 
-    private doFormatDocument(
-        document: vscode.TextDocument, token: vscode.CancellationToken
-    ): Thenable<vscode.TextEdit[]> {
+    private doFormatDocument(document: vscode.TextDocument, token: vscode.CancellationToken):
+        Thenable<vscode.TextEdit[]> {
         return new Promise((resolve, reject) => {
-            let filename = document.fileName;
+                   const filename = document.fileName;
 
-            let formatCommandBinPath = getBinPath(this.getExecutablePath());
-            const codeContent = getLucidEdits(document, this.getAssumedFilename(document));
+                   const formatCommandBinPath = getBinPath(this.getExecutablePath());
+                   const codeContent = getLucidEdits(document, this.getAssumedFilename(document));
 
-            let childCompleted = (err, stdout, stderr) => {
-                try {
-                    if (err && (<any>err).code === 'ENOENT') {
-                        vscode.window.showInformationMessage(
-                            'The \'' + formatCommandBinPath +
-                            '\' command is not available.  Please check your clang-format.executable user setting and ensure it is installed.'
-                        );
-                        return resolve(null);
-                    }
-                    if (stderr) {
-                        outputChannel.show();
-                        outputChannel.clear();
-                        outputChannel.appendLine(stderr);
-                        return reject('Cannot format due to syntax errors.');
-                    }
-                    if (err) {
-                        return reject();
-                    }
-                    return resolve(this.getEdits(document, stdout));
-                } catch (e) {
-                    reject(e);
-                }
-            };
+                   const childCompleted = (err, stdout, stderr) => {
+                       try {
+                           if (err && (<any>err).code === 'ENOENT') {
+                               vscode.window.showInformationMessage(
+                                   'The \'' + formatCommandBinPath +
+                                   '\' command is not available.  Please check your clang-format.executable user setting and ensure it is installed.'
+                               );
+                               return resolve(null);
+                           }
+                           if (stderr) {
+                               outputChannel.show();
+                               outputChannel.clear();
+                               outputChannel.appendLine(stderr);
+                               return reject('Cannot format due to syntax errors.');
+                           }
+                           if (err) {
+                               return reject();
+                           }
+                           return resolve(this.getEdits(document, stdout));
+                       } catch (e) {
+                           reject(e);
+                       }
+                   };
 
-            let formatArgs = [`-assume-filename=${this.getAssumedFilename(document)}`];
+                   const formatArgs = [`-assume-filename=${this.getAssumedFilename(document)}`];
 
-            let workingPath = vscode.workspace.rootPath;
-            if (!document.isUntitled) {
-                workingPath = path.dirname(document.fileName);
-            }
+                   let workingPath = vscode.workspace.rootPath;
+                   if (!document.isUntitled) {
+                       workingPath = path.dirname(document.fileName);
+                   }
 
-            let child = cp.execFile(formatCommandBinPath, formatArgs, {cwd: workingPath}, childCompleted);
-            child.stdin.end(codeContent);
+                   const child = cp.execFile(formatCommandBinPath, formatArgs, {cwd: workingPath}, childCompleted);
+                   child.stdin.end(codeContent);
 
-            if (token) {
-                token.onCancellationRequested(() => {
-                    child.kill();
-                    reject(new Error('Cancelation requested'));
-                });
-            }
-        }).catch(e => {
-            console.log(e);
-            return ([] as any);
-        });
+                   if (token) {
+                       token.onCancellationRequested(() => {
+                           child.kill();
+                           reject(new Error('Cancelation requested'));
+                       });
+                   }
+               })
+            .catch(e => {
+                console.log(e);
+                return ([] as any);
+            });
     }
 
     public formatDocument(document: vscode.TextDocument): Thenable<vscode.TextEdit[]> {
@@ -196,13 +197,13 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
 }
 
 export function activate(ctx: vscode.ExtensionContext): void {
-    let formatter = new LucidDocumentFormattingEditProvider();
+    const formatter = new LucidDocumentFormattingEditProvider();
 
     console.log('lucid format active');
 
     const ts = {
         language: 'typescript',
         scheme: 'file',
-    }
+    };
     ctx.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(ts, formatter));
 }

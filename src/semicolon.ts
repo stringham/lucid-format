@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
 
-import {Replacement, combineReplacements} from './common/replace';
+import {combineReplacements, Replacement} from './common/replace';
 import {walk} from './common/walk';
 
 export function transform(file: ts.SourceFile): Replacement[] {
@@ -58,7 +58,7 @@ export function transform(file: ts.SourceFile): Replacement[] {
 
         if (ts.isIfStatement(node)) {
             const thenStatement = node.thenStatement;
-            if (thenStatement.getText().slice(-1) != '}') {
+            if (!ts.isBlock(thenStatement)) {
                 indexesOpen.push(thenStatement.getStart());
                 indexesClose.push(thenStatement.getEnd());
             }
@@ -88,7 +88,7 @@ export function transform(file: ts.SourceFile): Replacement[] {
 
         if (ts.isIterationStatement(node, false)) {
             const statement = node.statement;
-            if (statement.getText().slice(-1) != '}') {
+            if (!ts.isBlock(statement)) {
                 indexesOpen.push(statement.getStart());
                 indexesClose.push(statement.getEnd());
             }
