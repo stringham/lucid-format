@@ -143,10 +143,14 @@ function canBeConst(node: ts.Node) {
                 return true;
             }
         }
-        if (ts.isPostfixUnaryExpression(n)) {
+        const mutatorOperator: {[key: number]: true} = {
+            [ts.SyntaxKind.PlusPlusToken]: true,
+            [ts.SyntaxKind.MinusMinusToken]: true,
+        };
+        if (ts.isPostfixUnaryExpression(n) && mutatorOperator[n.operator]) {
             return true;
         }
-        if (ts.isPrefixUnaryExpression(n)) {
+        if (ts.isPrefixUnaryExpression(n) && mutatorOperator[n.operator]) {
             return true;
         }
         return false;
