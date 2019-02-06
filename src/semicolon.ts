@@ -1,8 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as ts from 'typescript';
 
-import {combineReplacements, Replacement} from './common/replace';
+import {Replacement} from './common/replace';
 import {walk} from './common/walk';
 
 export function transform(file: ts.SourceFile): Replacement[] {

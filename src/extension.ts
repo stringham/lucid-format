@@ -116,7 +116,7 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
     // Get execute name in clang-format.executable, if not found, use default value
     // If configure has changed, it will get the new value
     private getExecutablePath() {
-        let execPath = vscode.workspace.getConfiguration('lucid-format').get<string>('clang-format-executable');
+        const execPath = vscode.workspace.getConfiguration('lucid-format').get<string>('clang-format-executable');
         if (!execPath) {
             return this.defaultConfigure.executable;
         }

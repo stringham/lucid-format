@@ -6,6 +6,7 @@ import {combineReplacements, doReplacements, Replacement} from './common/replace
 import {transform as replaceVars} from './novars';
 import {transform as missingSemicolons} from './semicolon';
 import {transform as trailingComma} from './trailingcommainitializer';
+import {transform as removeUnusedImports} from './unusedimports';
 
 export function getLucidEdits(document: vscode.TextDocument, name: string): string {
     const contents = document.getText();
@@ -15,6 +16,7 @@ export function getLucidEdits(document: vscode.TextDocument, name: string): stri
         replaceVars,
         combineImports,
         trailingComma,
+        removeUnusedImports,
     ];
     let replacements: Replacement[] = [];
     transformFunctions.forEach(f => replacements.push(...f(sourceFile)));

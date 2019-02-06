@@ -2,13 +2,13 @@
   "name": "lucid-format",
   "displayName": "Lucid Format",
   "description": "Format TypeScript following Lucid Conventions",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "publisher": "stringham",
   "engines": {
     "vscode": "^1.1.0"
   },
   "dependencies": {
-    "typescript":"2.7.2"
+    "typescript": "3.3.1"
   },
   "categories": [
     "Formatters"
@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "@types/node": "^7.0.46",
-    "typescript": "^2.6.1",
     "vscode": "^1.1.6"
   },
   "icon": "lucid-format.png",

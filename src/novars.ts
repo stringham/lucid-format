@@ -1,8 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
 import * as ts from 'typescript';
 
-import {doReplacements, Replacement as Replacement} from './common/replace';
+import {Replacement as Replacement} from './common/replace';
 import {findDescendents, findFirstAncestor, findParent, isAncestor, walk} from './common/walk';
 
 function getVarScopeBlock(node: ts.Node) {
@@ -60,9 +58,9 @@ function canChangeToLet(v: ts.Node) {
     if (!v.parent || !ts.isVariableDeclarationList(v.parent)) {
         return false;
     }
-    let scope = getVarScopeBlock(v);
+    const scope = getVarScopeBlock(v);
     const vd = v.parent;
-    let blockScope = getBlockScope(v);
+    const blockScope = getBlockScope(v);
 
     if (!scope || !blockScope) {
         return false;
@@ -86,7 +84,7 @@ function canChangeToLet(v: ts.Node) {
         return references.every(ref => {
             const inScope = isAncestor(blockScope!, ref);
             const isAfter = ref.getStart() >= v.getStart();
-            let declarationAncestor =
+            const declarationAncestor =
                 findParent(ref, ts.SyntaxKind.VariableDeclaration) as (ts.VariableDeclaration | undefined);
             return inScope && isAfter &&
                 (!declarationAncestor || declarationAncestor.parent == vd ||
@@ -100,8 +98,8 @@ function canBeConst(node: ts.Node) {
         return false;
     }
 
-    let scope = getBlockScope(node);
-    let vd = node.parent;
+    const scope = getBlockScope(node);
+    const vd = node.parent;
 
     if (!scope || !vd) {
         return false;

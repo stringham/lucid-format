@@ -1,10 +1,8 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import * as ts from 'typescript';
 
 import {doReplacements, Replacement, replaceNode} from './common/replace';
 import {getRelativePath, removeExtension, resolveImport} from './common/util';
-import {walk} from './common/walk';
 
 function canonicalizeImport(filePath: string, importSpecifier: string): string {
     const resolved = resolveImport(importSpecifier, filePath);
