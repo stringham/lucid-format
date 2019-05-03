@@ -205,5 +205,10 @@ export function activate(ctx: vscode.ExtensionContext): void {
         language: 'typescript',
         scheme: 'file',
     };
+    const js = {
+        language: 'javascript',
+        scheme: 'file',
+    };
     ctx.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(ts, formatter));
+    ctx.subscriptions.push(vscode.languages.registerDocumentFormattingEditProvider(js, formatter));
 }
