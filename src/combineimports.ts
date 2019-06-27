@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as ts from 'typescript';
 
 import {doReplacements, Replacement, replaceNode} from './common/replace';
-import {getRelativePath, removeExtension, resolveImport} from './common/util';
+import {getRelativePath, removeExtension, resolveImport, removeTrailingSlash} from './common/util';
 
 function canonicalizeImport(filePath: string, importSpecifier: string): string {
     const resolved = resolveImport(importSpecifier, filePath);
@@ -10,7 +10,7 @@ function canonicalizeImport(filePath: string, importSpecifier: string): string {
         return resolved;
     }
     const relative = getRelativePath(filePath, resolved);
-    return removeExtension(relative);
+    return removeTrailingSlash(removeExtension(relative));
 }
 
 export function transform(file: ts.SourceFile): Replacement[] {
