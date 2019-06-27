@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'typescript';
 
+export function isDirectory(filePath: string) {
+    return fs.existsSync(filePath) && fs.lstatSync(filePath).isDirectory();
+}
+
 export function getTsConfig(filePath: string) {
     let dir = path.dirname(filePath);
     let prevDir = filePath;
@@ -30,15 +34,28 @@ export function resolveImport(importSpecifier: string, filePath: string): string
                 if (config.config.compilerOptions.paths[p].length == 1) {
                     const mapped = config.config.compilerOptions.paths[p][0].replace('*', '');
                     const mappedDir = path.resolve(path.dirname(config.path), mapped);
-                    return mappedDir + '/' + importSpecifier.substr(p.replace('*', '').length) + '.ts';
+                    
+                    const dirCheck = mappedDir + '/' + importSpecifier.substr(p.replace('*', '').length);
+                    const isIndex = isDirectory(dirCheck);
+
+                    return isIndex ? dirCheck : dirCheck + '.ts';
                 }
             }
         }
     }
     if (config && config.path) {
-        const relativeFromConfig = path.resolve(path.dirname(config.path), importSpecifier) + '.ts';
-        if (fs.existsSync(relativeFromConfig)) {
-            return relativeFromConfig;
+        const maybeDir = path.resolve(path.dirname(config.path), importSpecifier);
+        const isIndex = isDirectory(maybeDir);
+
+        if (isIndex) {
+            if (fs.existsSync(path.join(maybeDir, 'index.ts'))) {
+                return maybeDir;
+            }
+        } else {
+            const relativeFromConfig = maybeDir + '.ts';
+            if (fs.existsSync(relativeFromConfig)) {
+                return relativeFromConfig;
+            }
         }
     }
     return importSpecifier;
@@ -83,6 +100,13 @@ export function removeExtension(filePath: string): string {
     }
     if (extensions.indexOf(ext) >= 0) {
         return filePath.slice(0, -ext.length);
+    }
+    return filePath;
+}
+
+export function removeTrailingSlash(filePath: string): string {
+    if (filePath.endsWith('/') || filePath.endsWith('\\')) {
+        return filePath.slice(0, -1);
     }
     return filePath;
 }
