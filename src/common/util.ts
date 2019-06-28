@@ -29,17 +29,20 @@ export function resolveImport(importSpecifier: string, filePath: string): string
         return path.resolve(path.dirname(filePath), importSpecifier) + '.ts';
     }
     if (config && config.config.compilerOptions && config.config.compilerOptions.paths) {
-        for (let p in config.config.compilerOptions.paths) {
-            if (p.endsWith('*') && importSpecifier.startsWith(p.replace('*', ''))) {
-                if (config.config.compilerOptions.paths[p].length == 1) {
-                    const mapped = config.config.compilerOptions.paths[p][0].replace('*', '');
-                    const mappedDir = path.resolve(path.dirname(config.path), mapped);
-                    
-                    const dirCheck = mappedDir + '/' + importSpecifier.substr(p.replace('*', '').length);
-                    const isIndex = isDirectory(dirCheck);
+        const paths = config.config.compilerOptions.paths;
 
-                    return isIndex ? dirCheck : dirCheck + '.ts';
+        for (let p in paths) {
+            if (p.endsWith('*') && importSpecifier.startsWith(p.replace('*', ''))) {
+                if (paths[p].length == 1) {
+                    const mapped = paths[p][0].replace('*', '');
+                    const mappedDir = path.resolve(path.dirname(config.path), mapped);
+
+                    return mappedDir + '/' + importSpecifier.substr(p.replace('*', '').length) + '.ts';
                 }
+            } else if (p === importSpecifier && paths[p].length === 1) {
+                const mapped = paths[p][0];
+                const mappedDir = path.resolve(path.dirname(config.path), mapped);
+                return mappedDir;
             }
         }
     }
@@ -71,10 +74,19 @@ export function getRelativePath(fromPath: string, specifier: string): string {
     if (config && config.config && config.config.compilerOptions && config.config.compilerOptions.paths) {
         for (let p in config.config.compilerOptions.paths) {
             if (config.config.compilerOptions.paths[p].length == 1) {
-                const mapped = config.config.compilerOptions.paths[p][0].replace('*', '');
-                const mappedDir = path.resolve(path.dirname(config.path), mapped);
-                if (isInDir(mappedDir, specifier)) {
-                    return p.replace('*', '') + path.relative(mappedDir, specifier);
+                if (p.indexOf('*') !== -1) {
+                    const mapped = config.config.compilerOptions.paths[p][0].replace('*', '');
+                    const mappedDir = path.resolve(path.dirname(config.path), mapped);
+                    if (isInDir(mappedDir, specifier)) {
+                        return p.replace('*', '') + path.relative(mappedDir, specifier);
+                    }
+                } else {
+                    const mapped = config.config.compilerOptions.paths[p][0];
+                    const mappedDir = path.resolve(path.dirname(config.path), mapped);
+
+                    if (mappedDir === specifier) {
+                        return p;
+                    }
                 }
             }
         }
