@@ -138,7 +138,7 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
 
     private doFormatDocument(document: vscode.TextDocument, token: vscode.CancellationToken):
         Thenable<vscode.TextEdit[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise<vscode.TextEdit[]>((resolve, reject) => {
                    const filename = document.fileName;
 
                    const formatCommandBinPath = getBinPath(this.getExecutablePath());
@@ -151,7 +151,7 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
                                    'The \'' + formatCommandBinPath +
                                    '\' command is not available.  Please check your clang-format.executable user setting and ensure it is installed.'
                                );
-                               return resolve(null);
+                               return resolve([]);
                            }
                            if (stderr) {
                                outputChannel.show();

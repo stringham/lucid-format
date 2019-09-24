@@ -1,6 +1,7 @@
 import * as ts from 'typescript';
 import * as vscode from 'vscode';
 
+import {transform as accessModifiers} from './accessmodifiers';
 import {transform as combineImports} from './combineimports';
 import {combineReplacements, doReplacements, Replacement} from './common/replace';
 import {transform as initializeEnums} from './initializeenums';
@@ -13,6 +14,7 @@ import {transform as variableDeclaration} from './variabledeclaration';
 export function getLucidEdits(document: vscode.TextDocument, name: string): string {
     const contents = document.getText();
     const sourceFile = ts.createSourceFile(name, contents, ts.ScriptTarget.Latest, true);
+    const addModifiers = vscode.workspace.getConfiguration('lucid-format').get<boolean>('add-missing-access-modifiers');
     const transformFunctions = [
         missingSemicolons,
         trailingComma,
@@ -21,6 +23,7 @@ export function getLucidEdits(document: vscode.TextDocument, name: string): stri
         combineImports,
         removeUnusedImports,
         initializeEnums,
+        ...(addModifiers ? [accessModifiers] : []),
     ];
     let replacements: Replacement[] = [];
     transformFunctions.forEach(f => replacements.push(...f(sourceFile)));

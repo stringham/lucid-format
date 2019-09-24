@@ -25,6 +25,11 @@
       "type": "object",
       "title": "Lucid Format configuration",
       "properties": {
+        "lucid-format.add-missing-access-modifiers": {
+          "type":"boolean",
+          "default": true,
+          "description": "Add missing access modifiers when formatting"
+        },
         "lucid-format.clang-format-executable": {
           "type": "string",
           "default": "clang-format",
