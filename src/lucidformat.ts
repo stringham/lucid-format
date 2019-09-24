@@ -14,7 +14,9 @@ import {transform as variableDeclaration} from './variabledeclaration';
 export function getLucidEdits(document: vscode.TextDocument, name: string): string {
     const contents = document.getText();
     const sourceFile = ts.createSourceFile(name, contents, ts.ScriptTarget.Latest, true);
-    const addModifiers = vscode.workspace.getConfiguration('lucid-format').get<boolean>('add-missing-access-modifiers');
+    const addModifiers =
+        vscode.workspace.getConfiguration('lucid-format').get<boolean>('add-missing-access-modifiers') &&
+        document.languageId === 'typescript';
     const transformFunctions = [
         missingSemicolons,
         trailingComma,
