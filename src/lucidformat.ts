@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 
 import {transform as combineImports} from './combineimports';
 import {combineReplacements, doReplacements, Replacement} from './common/replace';
+import {transform as initializeEnums} from './initializeenums';
 import {transform as replaceVars} from './novars';
 import {transform as missingSemicolons} from './semicolon';
 import {transform as trailingComma} from './trailingcommainitializer';
@@ -19,6 +20,7 @@ export function getLucidEdits(document: vscode.TextDocument, name: string): stri
         replaceVars,
         combineImports,
         removeUnusedImports,
+        initializeEnums,
     ];
     let replacements: Replacement[] = [];
     transformFunctions.forEach(f => replacements.push(...f(sourceFile)));
