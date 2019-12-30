@@ -19,7 +19,7 @@ export function transform(file: ts.SourceFile): Replacement[] {
             }
             if (hasModifier || node.parameters.length >= 4) {
                 const last = node.parameters[node.parameters.length - 1];
-                if (file.getFullText()[last.getEnd()] != ',') {
+                if (!last.dotDotDotToken && file.getFullText()[last.getEnd()] != ',') {
                     indexes[last.getEnd()] = true;
                 }
             }
