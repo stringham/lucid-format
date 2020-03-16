@@ -1,6 +1,6 @@
 import * as ts from 'typescript';
 
-import {Replacement} from './common/replace';
+import {Replacement, replaceNode} from './common/replace';
 import {walk} from './common/walk';
 
 export function transform(file: ts.SourceFile): Replacement[] {
@@ -52,6 +52,10 @@ export function transform(file: ts.SourceFile): Replacement[] {
                     }
                 }
             });
+        }
+
+        if (ts.isEmptyStatement(node) || ts.isSemicolonClassElement(node)) {
+            replacements.push(replaceNode(node, ''));
         }
 
         if (ts.isIfStatement(node)) {
