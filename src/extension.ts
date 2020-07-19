@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import cp = require('child_process');
 import path = require('path');
-import {getBinPath} from './clangpath';
 import {getLucidEdits} from './lucidformat';
 import {ISequence, LcsDiff} from './diff/diff';
 
@@ -116,17 +115,7 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
     // Get execute name in clang-format.executable, if not found, use default value
     // If configure has changed, it will get the new value
     private getExecutablePath() {
-        const execPath = vscode.workspace.getConfiguration('lucid-format').get<string>('clang-format-executable');
-        if (!execPath) {
-            return this.defaultConfigure.executable;
-        }
-
-        // replace placeholders, if present
-        return execPath.replace(/\${workspaceRoot}/g, vscode.workspace.rootPath)
-            .replace(/\${cwd}/g, process.cwd())
-            .replace(/\${env\.([^}]+)}/g, (sub: string, envName: string) => {
-                return process.env[envName];
-            });
+        return this.defaultConfigure.executable;
     }
 
     private getAssumedFilename(document: vscode.TextDocument) {

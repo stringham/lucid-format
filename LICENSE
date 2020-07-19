@@ -1,8 +1,7 @@
 The MIT License (MIT)
 
-Copyright for portions of this project are held by Xaver Hellauer, 2016 as
-part of project vscode-clang-format-provider (https://github.com/xaverh/vscode-clang-format-provider),
-other portions are held by Microsoft Corporation, 2015-2018 of project vscode (https://github.com/Microsoft/vscode).
+Copyright for portions of this project are held by Microsoft Corporation,
+2015-2018 of project vscode (https://github.com/Microsoft/vscode).
 
 All other copyright for this project are held by Ryan Stringham, 2018 - present.
 
