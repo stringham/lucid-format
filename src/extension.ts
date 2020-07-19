@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import cp = require('child_process');
+import {format, resolveConfig, resolveConfigFile} from 'prettier';
 import path = require('path');
 import {getLucidEdits} from './lucidformat';
 import {ISequence, LcsDiff} from './diff/diff';
@@ -7,34 +7,32 @@ import {ISequence, LcsDiff} from './diff/diff';
 export const outputChannel = vscode.window.createOutputChannel('Lucid-Format');
 
 export class LucidDocumentFormattingEditProvider implements vscode.DocumentFormattingEditProvider {
-    private defaultConfigure = {executable: 'clang-format', assumeFilename: 'file.ts'};
-
-    public provideDocumentFormattingEdits(
+    public async provideDocumentFormattingEdits(
         document: vscode.TextDocument,
         options: vscode.FormattingOptions,
         token: vscode.CancellationToken,
-    ): Thenable<vscode.TextEdit[]> {
-        return this.doFormatDocument(document, token);
+    ): Promise<vscode.TextEdit[]> {
+        return await this.formatDocument(document);
     }
 
     private getEdits(document: vscode.TextDocument, finalContent: string): vscode.TextEdit[] {
-        const modelLineSequence = new class implements ISequence {
+        const modelLineSequence = new (class implements ISequence {
             public getLength(): number {
                 return document.lineCount;
             }
             public getElementHash(index: number): string {
                 return document.lineAt(index).text;
             }
-        };
+        })();
         const finalLines = finalContent.split('\n');
-        const textSourceLineSequence = new class implements ISequence {
+        const textSourceLineSequence = new (class implements ISequence {
             public getLength(): number {
                 return finalLines.length;
             }
             public getElementHash(index: number): string {
                 return finalLines[index];
             }
-        };
+        })();
 
         const diffResult = new LcsDiff(modelLineSequence, textSourceLineSequence).ComputeDiff(false);
 
@@ -60,21 +58,25 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
                 if (originalStart == modelLineCount) {
                     console.log('insertion at end');
                     // insert at end
-                    edits.push(new vscode.TextEdit(
-                        new vscode.Range(
-                            document.lineAt(document.lineCount - 1).range.end,
-                            document.lineAt(document.lineCount - 1).range.end
+                    edits.push(
+                        new vscode.TextEdit(
+                            new vscode.Range(
+                                document.lineAt(document.lineCount - 1).range.end,
+                                document.lineAt(document.lineCount - 1).range.end,
+                            ),
+                            '\n' + text,
                         ),
-                        '\n' + text
-                    ));
+                    );
                 } else {
-                    edits.push(new vscode.TextEdit(
-                        new vscode.Range(
-                            new vscode.Position(originalStart, 0),
-                            new vscode.Position(originalStart, 0),
+                    edits.push(
+                        new vscode.TextEdit(
+                            new vscode.Range(
+                                new vscode.Position(originalStart, 0),
+                                new vscode.Position(originalStart, 0),
+                            ),
+                            text + '\n',
                         ),
-                        text + '\n'
-                    ));
+                    );
                 }
             } else if (modifiedLength === 0) {
                 // deletion
@@ -82,106 +84,69 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
                 if (originalStart + originalLength >= modelLineCount) {
                     console.log('deletion at end');
                     // delete at end
-                    edits.push(new vscode.TextEdit(
-                        new vscode.Range(
-                            document.lineAt(originalStart).range.end, document.lineAt(document.lineCount - 1).range.end
+                    edits.push(
+                        new vscode.TextEdit(
+                            new vscode.Range(
+                                document.lineAt(originalStart).range.end,
+                                document.lineAt(document.lineCount - 1).range.end,
+                            ),
+                            '',
                         ),
-                        ''
-                    ));
+                    );
                 } else {
-                    edits.push(new vscode.TextEdit(
-                        new vscode.Range(
-                            document.lineAt(originalStart).range.start,
-                            document.lineAt(originalStart + originalLength).range.start
+                    edits.push(
+                        new vscode.TextEdit(
+                            new vscode.Range(
+                                document.lineAt(originalStart).range.start,
+                                document.lineAt(originalStart + originalLength).range.start,
+                            ),
+                            '',
                         ),
-                        ''
-                    ));
+                    );
                 }
             } else {
                 console.log('modify');
-                edits.push(new vscode.TextEdit(
-                    new vscode.Range(
-                        document.lineAt(originalStart).range.start,
-                        document.lineAt(originalStart + originalLength - 1).range.end
+                edits.push(
+                    new vscode.TextEdit(
+                        new vscode.Range(
+                            document.lineAt(originalStart).range.start,
+                            document.lineAt(originalStart + originalLength - 1).range.end,
+                        ),
+                        text,
                     ),
-                    text
-                ));
+                );
             }
         }
 
         return edits;
     }
 
-    // Get execute name in clang-format.executable, if not found, use default value
-    // If configure has changed, it will get the new value
-    private getExecutablePath() {
-        return this.defaultConfigure.executable;
-    }
-
     private getAssumedFilename(document: vscode.TextDocument) {
         if (document.isUntitled) {
-            return this.defaultConfigure.assumeFilename;
+            return 'file.ts';
         }
         return document.fileName;
     }
 
-    private doFormatDocument(document: vscode.TextDocument, token: vscode.CancellationToken):
-        Thenable<vscode.TextEdit[]> {
-        return new Promise<vscode.TextEdit[]>((resolve, reject) => {
-                   const filename = document.fileName;
+    private async formatDocument(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
+        const filename = this.getAssumedFilename(document);
+        const settingsFile = await resolveConfigFile(filename);
+        const settings = settingsFile && (await resolveConfig(settingsFile));
+        if (!settings) {
+            throw new Error('No valid Prettier settings found.');
+        }
+        const codeContent = getLucidEdits(document, filename);
 
-                   const formatCommandBinPath = getBinPath(this.getExecutablePath());
-                   const codeContent = getLucidEdits(document, this.getAssumedFilename(document));
+        let workingPath = vscode.workspace.rootPath;
+        if (!document.isUntitled) {
+            workingPath = path.dirname(document.fileName);
+        }
 
-                   const childCompleted = (err, stdout, stderr) => {
-                       try {
-                           if (err && (<any>err).code === 'ENOENT') {
-                               vscode.window.showInformationMessage(
-                                   'The \'' + formatCommandBinPath +
-                                   '\' command is not available.  Please check your clang-format.executable user setting and ensure it is installed.'
-                               );
-                               return resolve([]);
-                           }
-                           if (stderr) {
-                               outputChannel.show();
-                               outputChannel.clear();
-                               outputChannel.appendLine(stderr);
-                               return reject('Cannot format due to syntax errors.');
-                           }
-                           if (err) {
-                               return reject();
-                           }
-                           return resolve(this.getEdits(document, stdout));
-                       } catch (e) {
-                           reject(e);
-                       }
-                   };
-
-                   const formatArgs = [`-assume-filename=${this.getAssumedFilename(document)}`];
-
-                   let workingPath = vscode.workspace.rootPath;
-                   if (!document.isUntitled) {
-                       workingPath = path.dirname(document.fileName);
-                   }
-
-                   const child = cp.execFile(formatCommandBinPath, formatArgs, {cwd: workingPath}, childCompleted);
-                   child.stdin.end(codeContent);
-
-                   if (token) {
-                       token.onCancellationRequested(() => {
-                           child.kill();
-                           reject(new Error('Cancelation requested'));
-                       });
-                   }
-               })
-            .catch(e => {
-                console.log(e);
-                return ([] as any);
-            });
-    }
-
-    public formatDocument(document: vscode.TextDocument): Thenable<vscode.TextEdit[]> {
-        return this.doFormatDocument(document, null);
+        const prettierOutput = format(codeContent, {
+            ...settings,
+            filepath: filename,
+        });
+        return this.getEdits(document, prettierOutput);
     }
 }
 
