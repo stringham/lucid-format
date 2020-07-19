@@ -2,7 +2,7 @@
   "name": "lucid-format",
   "displayName": "Lucid Format",
   "description": "Format TypeScript following Lucid Conventions",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "publisher": "stringham",
   "engines": {
     "vscode": "^1.1.0"
@@ -21,22 +21,7 @@
     "onLanguage:typescript"
   ],
   "contributes": {
-    "configuration": {
-      "type": "object",
-      "title": "Lucid Format configuration",
-      "properties": {
-        "lucid-format.add-missing-access-modifiers": {
-          "type":"boolean",
-          "default": true,
-          "description": "Add missing access modifiers when formatting"
-        },
-        "lucid-format.clang-format-executable": {
-          "type": "string",
-          "default": "clang-format",
-          "description": "clang-format executable path"
-        }
-      }
-    }
+    "configuration": {}
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
