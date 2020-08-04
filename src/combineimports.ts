@@ -71,7 +71,7 @@ export function transform(file: ts.SourceFile): Replacement[] {
             replacements.push({
                 start: first.importClause!.namedBindings!.getStart(),
                 end: first.importClause!.namedBindings!.getEnd(),
-                value: '{' + names.map(n => n.getText()).join(', ') + '}',
+                value: '{' + names.map((n) => n.getText()).join(', ') + '}',
             });
             replacements.push({
                 start: first.moduleSpecifier.getStart(),

@@ -141,7 +141,6 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
         if (!document.isUntitled) {
             workingPath = path.dirname(document.fileName);
         }
-
         const prettierOutput = format(codeContent, {
             ...settings,
             filepath: filename,

@@ -11,7 +11,7 @@ export function walk(node: ts.Node, fn: (node: ts.Node) => any): boolean {
         }
     }
     return false;
-};
+}
 
 export function findParent(child: ts.Node, kind: ts.SyntaxKind) {
     if (!child.parent) {
@@ -41,7 +41,7 @@ export function findFirstAncestor(child: ts.Node, f: (n: ts.Node) => boolean) {
 export function findDescendents(parent: ts.Node, f: (n: ts.Node) => boolean): ts.Node[] {
     const result: ts.Node[] = [];
 
-    walk(parent, n => {
+    walk(parent, (n) => {
         if (f(n)) {
             result.push(n);
         }

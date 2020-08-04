@@ -17,7 +17,7 @@ function getImports(file: ts.SourceFile) {
                     const bindings = node.importClause.namedBindings;
                     if (bindings.kind == ts.SyntaxKind.NamedImports) {
                         const namedImports = bindings as ts.NamedImports;
-                        namedImports.elements.forEach(a => {
+                        namedImports.elements.forEach((a) => {
                             if (a.name.getText() != 'DontRemoveThisImport') {
                                 importNames.push(a.name.getText());
                             }
@@ -70,7 +70,7 @@ function removeImports(file: ts.SourceFile, imports: string[]): Replacement[] {
                             result.push({
                                 start: namedImports.getStart(),
                                 end: namedImports.getEnd(),
-                                value: '{' + keep.map(a => a.getText()).join(', ') + '}',
+                                value: '{' + keep.map((a) => a.getText()).join(', ') + '}',
                             });
                         }
                     } else if (bindings.kind == ts.SyntaxKind.NamespaceImport) {
@@ -96,13 +96,13 @@ export function transform(file: ts.SourceFile): Replacement[] {
     const importNames = getImports(file);
     const used = new Set<string>();
 
-    walk(file, node => {
+    walk(file, (node) => {
         if (node.kind == ts.SyntaxKind.Identifier && !findParent(node, ts.SyntaxKind.ImportDeclaration)) {
             used.add(node.getText());
         }
     });
 
-    const unused = importNames.filter(a => !used.has(a));
+    const unused = importNames.filter((a) => !used.has(a));
 
     if (unused.length > 0) {
         return removeImports(file, unused);
