@@ -2,7 +2,7 @@
   "name": "lucid-format",
   "displayName": "Lucid Format",
   "description": "Format TypeScript following Lucid Conventions",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "publisher": "stringham",
   "engines": {
     "vscode": "^1.1.0"
