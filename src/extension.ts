@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import {ESLint} from 'eslint';
 import {format, resolveConfig, resolveConfigFile} from 'prettier';
 import path = require('path');
 import {getLucidEdits} from './lucidformat';
@@ -130,19 +131,23 @@ export class LucidDocumentFormattingEditProvider implements vscode.DocumentForma
 
     private async formatDocument(document: vscode.TextDocument): Promise<vscode.TextEdit[]> {
         const filename = this.getAssumedFilename(document);
-        const settingsFile = await resolveConfigFile(filename);
-        const settings = settingsFile && (await resolveConfig(settingsFile));
-        if (!settings) {
+        const eslint = new ESLint({
+            useEslintrc: true,
+            fix: true,
+        });
+        const prettierSettingsFile = await resolveConfigFile(filename);
+        const prettierSettings = prettierSettingsFile && (await resolveConfig(prettierSettingsFile));
+        if (!prettierSettings) {
             throw new Error('No valid Prettier settings found.');
         }
-        const codeContent = getLucidEdits(document, filename);
 
-        let workingPath = vscode.workspace.rootPath;
-        if (!document.isUntitled) {
-            workingPath = path.dirname(document.fileName);
-        }
+        const fileContents = document.getText();
+        const lintResults = await eslint.lintText(fileContents, {filePath: filename});
+        const lintOutput = (lintResults[0] && lintResults[0].output) || fileContents;
+        const codeContent = getLucidEdits(lintOutput, filename);
+
         const prettierOutput = format(codeContent, {
-            ...settings,
+            ...prettierSettings,
             filepath: filename,
         });
         return this.getEdits(document, prettierOutput);

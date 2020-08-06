@@ -1,3 +1,3 @@
 # lucid-format
 
-This extension provides formatting functionality for TypeScript. It uses prettier along with updating import statements and initializing enums.
+This extension provides formatting functionality for TypeScript. It uses Prettier, ESLint autofixes, along with combining/removing duplicate imports and initializing enums.
