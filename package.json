@@ -2,14 +2,15 @@
   "name": "lucid-format",
   "displayName": "Lucid Format",
   "description": "Format TypeScript following Lucid Conventions",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "publisher": "stringham",
   "engines": {
     "vscode": "^1.1.0"
   },
   "dependencies": {
-    "prettier": "^2.0.5",
-    "typescript": "3.3.1"
+    "prettier": "2.0.4",
+    "typescript": "3.3.1",
+    "prettier-plugin-organize-imports": "1.1.1"
   },
   "categories": [
     "Formatters"
@@ -30,7 +31,7 @@
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
-    "@types/node": "^7.0.46",
+    "@types/node": "14.0.27",
     "@types/prettier": "^2.0.2",
     "vscode": "^1.1.6"
   },
